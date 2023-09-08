@@ -1,7 +1,8 @@
 package com.example.todolist.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -36,12 +37,19 @@ public class TodoListController {
 	private final TodoService todoService; //データベース操作用で追加
 
 	@GetMapping("/todo")
-	public ModelAndView showTodoList(ModelAndView mv) {
+	public ModelAndView showTodoList(ModelAndView mv,
+			@PageableDefault(page = 0, size = 5, sort = "id") Pageable pageable) {
 		//一覧表示
 		mv.setViewName("todoList");
-		List<Todo> todoList = todoRepository.findAll();//「/todo」が実行されたら、メソッド実行。
-		mv.addObject("todoList", todoList);
+		//ページング設定のため変更（9/7）
+		//		List<Todo> todoList = todoRepository.findAll();//「/todo」が実行されたら、メソッド実行。
+
+		//追加機能：登録・更新・削除後もページングや検索情報を保持して表示のため、todoQueryを最初に宣言して内容を追加するように記述。
+		Page<Todo> todoPage = todoRepository.findAll(pageable); //ページネーションの結果をわたす
+		mv.addObject("todoList", todoPage.getContent()); //Pageオブジェクトのページ情報に加えて、次に表示するページ単位のデータをコンテンツとして持っている。
+		mv.addObject("todoPage", todoPage);
 		mv.addObject("todoQuery", new TodoQuery()); //
+		session.setAttribute("todoQuery", new TodoQuery()); //ページリングに現在の検索条件をセットして確保しておく
 		return mv;
 	}
 
@@ -63,7 +71,7 @@ public class TodoListController {
 			Todo todo = todoData.toEntity();
 			//saveAndFlushのメソッド処理で「カラム毎の内容をデータベースに登録」までをスプリングで実行してくれる。レポジトリクラスで実装しているから可能。
 			todoRepository.saveAndFlush(todo);
-			return "redirect:/todo";
+			return "redirect:/todo/query";
 			//			return showTodoList(mv);　アドレスがtodo/createのままで一覧表示のメソッドを動かそうとすると、再読み込みが発生し、
 			//実行するとブラウザは直前動作も一緒に実行するため「登録・画面表示」の二つが実行されてしまう。そのためリダイレクトで直接URLを移動してからメソッドを実行するように設定する。
 		} else {
@@ -76,7 +84,7 @@ public class TodoListController {
 
 	@PostMapping("/todo/cancel")
 	public String cancel() {
-		return "redirect:/todo";
+		return "redirect:/todo/query";
 	}
 
 	@GetMapping("/todo/{id}")
@@ -99,7 +107,7 @@ public class TodoListController {
 			//エラーがない場合
 			Todo todo = todoData.toEntity(); //エンティティオブジェクト
 			todoRepository.saveAndFlush(todo);
-			return "redirect:/todo"; //リスト一覧に戻す
+			return "redirect:/todo/query"; //リスト一覧に戻す
 		} else {
 			//エラーがあった場合、
 			return "todoForm";
@@ -116,16 +124,40 @@ public class TodoListController {
 
 	//検索
 	@PostMapping("/todo/query")
-	public ModelAndView queryTodo(@ModelAttribute TodoQuery todoQuery, BindingResult result, ModelAndView mv) { //検索フォーム内容はバインドされている
+	public ModelAndView queryTodo(@ModelAttribute TodoQuery todoQuery, BindingResult result,
+			@PageableDefault(page = 0, size = 5) Pageable pageable, ModelAndView mv) { //検索フォーム内容はバインドされている
 		mv.setViewName("todoList");
 		//入力内容を独自チェックに欠ける
-		List<Todo> todoList = null;
+		//		List<Todo> todoList = null;
+		Page<Todo> todoPage = null;
 		if (todoService.isValid(todoQuery, result)) {
 			//			todoList = todoService.doQuery(todoQuery); 
-			todoList = todoDaoImpl.findByJPQL(todoQuery); //①エラーがなければ実施　②todoListのServiceのクエリを実行、　③JPQLによる検索を実行
+			//			todoPage = todoDaoImpl.findByJPQL(todoQuery); //①エラーがなければ実施　②todoListのServiceのクエリを実行、　③JPQLによる検索を実行
+			todoPage = todoDaoImpl.findByCriteria(todoQuery, pageable); //Criteriaによる検索　検索条件は上記と同じ。使用する方をのこす。
 
+			//		mv.addObject("todoList", todoList); //mv.addObject("todoQuery",todoQuery);
+			session.setAttribute("todoQuery", todoQuery); //検索条件をセッションに保存しておく。Getメソッドのため、Modelを利用した保存はできない。
+
+			mv.addObject("todoPage", todoPage); //ページ情報
+			mv.addObject("todoList", todoPage.getContent());//検索結果
+		} else {
+			//エラーがあった場合の検索
+			mv.addObject("todoPage", null);
+			mv.addObject("todoList", null);
 		}
-		mv.addObject("todoList", todoList); //mv.addObject("todoQuery",todoQuery);
+		return mv;
+	}
+
+	//ページネーション用の表示メソッド
+	@GetMapping("/todo/query")
+	public ModelAndView queryTodo(@PageableDefault(page = 0, size = 5) Pageable pageable, ModelAndView mv) {
+		mv.setViewName("todoList");
+		//sessionに保存されている条件で検索
+		TodoQuery todoQuery = (TodoQuery) session.getAttribute("todoQuery");
+		Page<Todo> todoPage = todoDaoImpl.findByCriteria(todoQuery, pageable);
+		mv.addObject("todoQuery", todoQuery); //検索条件表示用
+		mv.addObject("todoPage", todoPage); //ページ情報
+		mv.addObject("todoList", todoPage.getContent()); //検索結果
 		return mv;
 	}
 

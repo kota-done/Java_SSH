@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+</head>
+<body>
+<!-- フラグメントにして使い回す -->
+<div th:fragment="msg_area">
+<!--エラーメッセージ表示  -->
+	<div th:if="${msg !=null}">
+		<div th:if="${msg.msgType =='E'}">
+			<div class="err_msg">
+				<img th:src="@{/icons/error_icon.png}" class="va">&nbsp;<span class="va" th:text="${msg.msgText}"></span>
+			</div>
+		</div>
+		<div th:if="${msg.msgType=='W'}">
+			<div class="warn_msg">
+				<img th:src="@{/icons/warning_icon.png}" class="va">&nbsp;<span class="va" th:text="${msg.msgText}"></span>
+			</div>
+		</div>
+		<div th:if="${msg.msgType=='I'}">
+			<div class="info_msg">
+				<img th:src="@{/icons/warning_icon.png}" class="va">&nbsp;<span class="va" th:text="${msg.msgText}"></span>
+			</div>
+		</div>
+		
+	</div>
+</div>
+</body>
+</html>

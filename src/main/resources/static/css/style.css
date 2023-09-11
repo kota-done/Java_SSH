@@ -40,3 +40,35 @@ button {
 #nav li{
 	margin-right: 10px;
 }
+
+/*操作メッセージ用*/
+.va{
+	vertical-align: middle;
+}
+.info_msg{
+	margin-bottom: 0.75em;
+	padding: 0.75em lem;
+	width: 50%;
+	color: bule;
+	background-color: #dfefff;
+	border:1px solid #379bff;
+	border-radius:8px;
+}
+.warn_msg{
+	margin-bottom: 0.75em;
+	padding: 0.75em lem;
+	width: 50%;
+	color: bule;
+	background-color: #ffffc6;
+	border:1px solid #ff8040;
+	border-radius:8px;
+}
+.err_msg{
+	margin-bottom: 0.75em;
+	padding: 0.75em lem;
+	width: 50%;
+	color: bule;
+	background-color: #ffe6e6;
+	border:1px solid #ff8080;
+	border-radius:8px;
+}

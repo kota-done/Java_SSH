@@ -73,6 +73,9 @@
 			</div>
 		</div>
 	</header>
+<main>
+	<!--メッセージ挿入  -->
+	<div th:replace="~{fragments::msg_area}"></div>
 	<h1>Todoタスクの一覧表示テーブル</h1>
 	<!--英語と日本語のプロパティ設定の追加  -->
 	${#locale.language}=
@@ -166,8 +169,7 @@
 				th:text="#{link.next}"></a></li>
 		</ul>
 	</div>
-
-	<main></main>
+	</main>
 	<!--footer追加（9/2）  -->
 	<div class="b-example-divider"></div>
 	<div class="container">

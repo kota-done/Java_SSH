@@ -9,6 +9,8 @@
 </style>
 </head>
 <body>
+<!--メッセージ挿入  -->
+	<div th:replace="~{fragments::msg_area}"></div>
 	<h1>新規登録フォーム</h1>
 	<!-- todoDataのオブジェクトを使用するとth:objectで宣言。あとは、valueやfieldでプロパティを選択する　あくまで、tymleafでエラー表示のためのdivクラスが下位クラスとして存在するためObject方を使用できる。 -->
 	<!--field要素＝id,name,value  メモに詳細を残している  -->

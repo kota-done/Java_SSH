@@ -3,7 +3,9 @@ package com.example.todolist.service;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -19,7 +21,10 @@ import lombok.AllArgsConstructor;
 @Service
 @AllArgsConstructor
 public class TodoService {
-	public boolean isValid(TodoData todoData, BindingResult result) {
+	//エラーメッセージ
+	private final MessageSource messageSource; //国際化に対応したメッセージの型
+
+	public boolean isValid(TodoData todoData, BindingResult result, boolean isCreate, Locale locale) {
 		boolean ans = true;
 		//件名が全角のときはエラーで返す
 		String title = todoData.getTitle();
@@ -32,7 +37,9 @@ public class TodoService {
 				}
 			}
 			if (isAllDoubleSpace) {
-				FieldError fieldError = new FieldError(result.getObjectName(), "title", "件名が全角スペースです");
+				FieldError fieldError = new FieldError(result.getObjectName(), "title",
+						messageSource.getMessage("DoubleSpace.todoData.title", null, locale));
+				//Localeに表示地域の特徴を取得している。getMessageメソッドには（取得ファイル名、エラーメッセージのプレースフォルダー、どの言語か）
 				result.addError(fieldError);
 				ans = false;
 			}
@@ -46,14 +53,15 @@ public class TodoService {
 			try {
 				deadlineDate = LocalDate.parse(deadline);
 				if (deadlineDate.isBefore(tody)) {
-					FieldError fieldError = new FieldError(result.getObjectName(), "deadline", "期限を設定するときは今日以降にしてください");
+					FieldError fieldError = new FieldError(result.getObjectName(), "deadline",
+							messageSource.getMessage("InvalidFormat.todoData.deadline", null, locale));
 					result.addError(fieldError);
 					ans = false;
 				}
 			} catch (DateTimeException e) {
 				// TODO: handle exception
 				FieldError fieldError = new FieldError(result.getObjectName(), "deadline",
-						"期限を設定するときはyyyy-MM-dd形式で入力してください");
+						messageSource.getMessage("Past.todoData.deadline", null, locale));
 				result.addError(fieldError);
 				ans = false;
 			}
@@ -61,7 +69,7 @@ public class TodoService {
 		return ans;
 	}
 
-	public boolean isValid(TodoQuery todoQuery, BindingResult result) {
+	public boolean isValid(TodoQuery todoQuery, BindingResult result, Locale locale) {
 		boolean ans = true;
 		//期限・開始の形式をチェック
 		String date = todoQuery.getDeadlineFrom();
@@ -72,7 +80,7 @@ public class TodoService {
 			} catch (DateTimeException e) {
 				// TODO: handle exception
 				FieldError fieldError = new FieldError(result.getObjectName(), "deadlineFrom",
-						"期限：開始を入力するときはyyyy-mm-dd形式で入力してください");
+						messageSource.getMessage("InvalidFormat.todoQuery.deadlineFrom", null, locale));
 				result.addError(fieldError);
 				ans = false;
 			}
@@ -85,7 +93,7 @@ public class TodoService {
 			} catch (DateTimeException e) {
 				// TODO: handle exception
 				FieldError fieldError = new FieldError(result.getObjectName(), "deadlineTo",
-						"期限：終了を入力するときはyyyy-mm-dd形式で入力してください");
+						messageSource.getMessage("InvalidFormat.todoQuery.deadlineTo", null, locale));
 				result.addError(fieldError);
 				ans = false;
 			}

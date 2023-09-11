@@ -1,5 +1,7 @@
 package com.example.todolist.controller;
 
+import java.util.Locale;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -64,8 +66,8 @@ public class TodoListController {
 
 	@PostMapping("/todo/create/do")
 	public String createTodo(@ModelAttribute @Validated TodoData todoData, BindingResult result, //TodoDataオブジェクトにバインドし、この時点でidはnull
-			ModelAndView mv) {
-		boolean isValid = todoService.isValid(todoData, result);
+			Model model, Locale locale) {
+		boolean isValid = todoService.isValid(todoData, result, true, locale);
 		//serviceクラスのバリデーションもクリアしたら登録処理に移る
 		if (!result.hasErrors() && isValid) {
 			Todo todo = todoData.toEntity();
@@ -100,9 +102,10 @@ public class TodoListController {
 
 	//更新
 	@PostMapping("/todo/update")
-	public String updateTodo(@ModelAttribute @Validated TodoData todoData, BindingResult result, Model model) {
+	public String updateTodo(@ModelAttribute @Validated TodoData todoData, BindingResult result, Model model,
+			Locale locale) {
 		//エラーチェック
-		boolean isValid = todoService.isValid(todoData, result);
+		boolean isValid = todoService.isValid(todoData, result, false, locale);
 		if (!result.hasErrors() && isValid) {
 			//エラーがない場合
 			Todo todo = todoData.toEntity(); //エンティティオブジェクト
@@ -125,12 +128,12 @@ public class TodoListController {
 	//検索
 	@PostMapping("/todo/query")
 	public ModelAndView queryTodo(@ModelAttribute TodoQuery todoQuery, BindingResult result,
-			@PageableDefault(page = 0, size = 5) Pageable pageable, ModelAndView mv) { //検索フォーム内容はバインドされている
+			@PageableDefault(page = 0, size = 5) Pageable pageable, ModelAndView mv, Locale locale) { //検索フォーム内容はバインドされている
 		mv.setViewName("todoList");
 		//入力内容を独自チェックに欠ける
 		//		List<Todo> todoList = null;
 		Page<Todo> todoPage = null;
-		if (todoService.isValid(todoQuery, result)) {
+		if (todoService.isValid(todoQuery, result, locale)) {
 			//			todoList = todoService.doQuery(todoQuery); 
 			//			todoPage = todoDaoImpl.findByJPQL(todoQuery); //①エラーがなければ実施　②todoListのServiceのクエリを実行、　③JPQLによる検索を実行
 			todoPage = todoDaoImpl.findByCriteria(todoQuery, pageable); //Criteriaによる検索　検索条件は上記と同じ。使用する方をのこす。

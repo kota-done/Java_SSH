@@ -89,7 +89,6 @@
 					<th th:text="#{label.title}"></th>
 					<th th:text="#{label.importance}"></th>
 					<th th:text="#{label.urgency}"></th>
-					<th th:text="#{label.task}"></th>
 					<th th:text="#{label.deadline}"></th>
 					<th th:text="#{label.check}"></th>
 				</tr>
@@ -143,7 +142,7 @@
 			<td><a th:href="@{/todo/__${todo.id}__}" th:text="${todo.title}"></a></td>
 			<td th:text="${todo.importance==1 ? '⭐︎⭐︎⭐︎':'⭐︎'}"></td>
 			<td th:text="${todo.urgency==1? '⭐︎⭐︎':'⭐︎'}"></td>
-			<td th:text="${#lists.size(todo.taskList)}" style="text-align:center"></td> <!-- タスク数の表示　9/13追加 -->
+
 			<td th:text="${todo.deadline}"></td>
 			<td th:text="${todo.done=='Y'? '__#{text.done}__':''}"></td>
 		</tr>

@@ -1,6 +1,5 @@
 package com.example.todolist.controller;
 
-import java.util.List;
 import java.util.Locale;
 
 import org.springframework.context.MessageSource;
@@ -15,17 +14,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.todolist.common.OpMsg;
 import com.example.todolist.dao.TodoDaoImpl;
-import com.example.todolist.entity.Task;
 import com.example.todolist.entity.Todo;
 import com.example.todolist.form.TodoData;
 import com.example.todolist.form.TodoQuery;
-import com.example.todolist.repository.TaskRepository;
 import com.example.todolist.repository.TodoRepository;
 import com.example.todolist.service.TodoService;
 
@@ -35,6 +31,8 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
+//todoテーブルを検索し、結果をhtmlに渡す
+
 @Controller
 @RequiredArgsConstructor //
 
@@ -43,7 +41,6 @@ public class TodoListController {
 	private final TodoRepository todoRepository;
 	private final TodoService todoService; //データベース操作用で追加
 	private final MessageSource messageSource;
-	private final TaskRepository taskRepository; //タスク処理用
 
 	@GetMapping("/todo")
 	public ModelAndView showTodoList(ModelAndView mv,
@@ -59,24 +56,9 @@ public class TodoListController {
 		mv.addObject("todoPage", todoPage);
 		mv.addObject("todoQuery", new TodoQuery()); //
 		session.setAttribute("todoQuery", new TodoQuery()); //ページリングに現在の検索条件をセットして確保しておく
-		//9/12　テーブル連携のため追加
-		List<Todo> todoList = todoRepository.findAll();
-		List<Task> taskList;
-		for (Todo todo : todoList) {
-			System.out.println(todo);
-			taskList = todo.getTaskList();
-			if (taskList.size() == 0) {
-				System.out.println("\tTask not found.");
-			} else {
-				for (Task task : taskList) {
-					System.out.println("\t" + task);
-				}
-			}
-		}
 		return mv;
 	}
 
-	//新規登録
 	//Todoデータ登録・登録と削除ボタンをわけるために追記（9/1）
 	@GetMapping("/todo/create/form")
 	public ModelAndView createTodo(ModelAndView mv) {
@@ -98,10 +80,9 @@ public class TodoListController {
 			String msg = messageSource.getMessage("msg.i.todo_created", null, locale);
 			//９/11 リダイレクトの場合、Model経由はデータ保持のスコープ外。redirectAttributeを使用する
 			redirectAttributes.addFlashAttribute("msg", new OpMsg("I", msg));
-			return "redirect:/todo/" + todo.getId();//検索結果も再表示するために、redirect:/todo/queryとしていたが、新規登録後、そのままタスクも登録できるように再度入力画面に遷移するように変更（9/14）
+			return "redirect:/todo/query";
 			//return showTodoList(mv);　アドレスがtodo/createのままで一覧表示のメソッドを動かそうとすると、再読み込みが発生し、
 			//実行するとブラウザは直前動作も一緒に実行するため「登録・画面表示」の二つが実行されてしまう。そのためリダイレクトで直接URLを移動してからメソッドを実行するように設定する。
-
 		} else {
 			//			mv.setViewName("todoForm");
 			//＠ModelAttributeがあることでmv.addObject("todoData",todoData)の記述が不要となる。自動的に発生したデータを遷移先でも表示可能。しかし、第一引数は使用するモデルクラス（頭文字は小文字である必要がある。
@@ -114,48 +95,23 @@ public class TodoListController {
 		}
 	}
 
-	//Task新規登録
-	@PostMapping("/task/create")
-	public String createTask(@ModelAttribute TodoData todoData, BindingResult result, Model model,
-			RedirectAttributes redirectAttributes, Locale locale) {
-		//エラーチェック
-		boolean isValid = todoService.isValid(todoData.getNewTask(), result, locale);
-		if (isValid) {
-			//エラーなし
-			Todo todo = todoData.toEntity();
-			Task task = todoData.toTaskEntity(); //
-			task.setTodo(todo);//
-			taskRepository.saveAndFlush(task);
-			//追加完了メッセージとリダイレクト
-			String msg = messageSource.getMessage("msg.i.task_created", null, locale);
-			redirectAttributes.addFlashAttribute("msg", new OpMsg("I", msg));
-			return "redirect:/todo/" + todo.getId();
-		} else {
-			//エラーありの場合
-			String msg = messageSource.getMessage("msg.e.input_something_wrong", null, locale);
-			model.addAttribute("msg", new OpMsg("E", msg));
-			return "todoForm";
-		}
-	}
-
 	@PostMapping("/todo/cancel")
 	public String cancel() {
 		return "redirect:/todo/query";
 	}
 
-	//更新　　IDで2つのテーブル連携している。Todo todoに両方とも入る。（9/13）
 	@GetMapping("/todo/{id}")
 	public ModelAndView todoById(@PathVariable(name = "id") int id, ModelAndView mv) {
 		mv.setViewName("todoForm");
-		//レポジトリを利用したIDでの検索(SELECT * FORM ~~ WHERE id =引数のidの値)と同義　レポジトリクラスはエンティティクラスを経由してtododbを参照するようになっている。
+		//レポジトリを利用したIDでの検索(SELECT * FORM ~~ WHERE id =引数のidの値)と同義　レポジトリクラスはエンティティクラスを参照してtododbを参照するようになっている。
 		Todo todo = todoRepository.findById(id).get();
-		//		mv.addObject("todoData", todo);
-		mv.addObject("todoData", new TodoData(todo)); //TodoData型のオブジェクトで渡す必要があるため変更（9/	13)
+		mv.addObject("todoData", todo);
 		session.setAttribute("mode", "update");
 		return mv;
 
 	}
 
+	//更新
 	@PostMapping("/todo/update")
 	public String updateTodo(@ModelAttribute @Validated TodoData todoData, BindingResult result, Model model,
 			RedirectAttributes redirectAttributes, Locale locale) {
@@ -169,7 +125,7 @@ public class TodoListController {
 			//９/11 リダイレクトの場合、Model経由はデータ保持のスコープ外。redirectAttributeを使用する
 			//	model.addAttribute("msg", new OpMsg("I", msg));
 			redirectAttributes.addFlashAttribute("msg", new OpMsg("I", msg));
-			return "redirect:/todo/" + todo.getId(); //リスト一覧に戻す　//更新後は一覧に戻す＋検索内容の保持のために/todo/queryとしていたが、更新確認のために再度入力画面に戻すために変更している。
+			return "redirect:/todo/query"; //リスト一覧に戻す
 		} else {
 			//エラーがあった場合、メッセージ添付
 			String msg = messageSource.getMessage("msg.e.input_something_wrong", null, locale);
@@ -187,17 +143,6 @@ public class TodoListController {
 		redirectAttributes.addFlashAttribute("msg", new OpMsg("I", msg));
 		todoRepository.deleteById(todoData.getId());
 		return "redirect:/todo";
-	}
-
-	//Taskのみ削除
-	@GetMapping("/task/delete")
-	public String deleteTask(@RequestParam(name = "task_id") int taskId, @RequestParam(name = "todo_id") int todoId,
-			RedirectAttributes redirectAttributes, Locale locale) {
-		taskRepository.deleteById(taskId);
-
-		String msg = messageSource.getMessage("msg.i.task_deleted", null, locale);
-		redirectAttributes.addFlashAttribute("msg", new OpMsg("I", msg));
-		return "redirect:/todo/" + todoId;
 	}
 
 	//検索

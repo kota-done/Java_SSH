@@ -5,26 +5,23 @@
 <title>Todo List</title>
 <link th:href="@{/css/style.css}" rel="stylesheet" type="text/css">
 <style>
+
 </style>
 </head>
 <body>
-	<!--メッセージ挿入  -->
+<!--メッセージ挿入  -->
 	<div th:replace="~{fragments::msg_area}"></div>
 	<h1>新規登録フォーム</h1>
 	<!-- todoDataのオブジェクトを使用するとth:objectで宣言。あとは、valueやfieldでプロパティを選択する　あくまで、tymleafでエラー表示のためのdivクラスが下位クラスとして存在するためObject方を使用できる。 -->
 	<!--field要素＝id,name,value  メモに詳細を残している  -->
 	<!-- fields.hasErrorsで飛ばした内容をth:errorsでそれぞれのプロパティ毎に受け取れるように設定 -->
 	<form th:action="@{/}" method="post" th:object="${todoData}">
-		<div style="display:flex">
-		<div>
-		🔲Todo
 		<table border="1">
 			<tr>
 				<!-- Id要素を追加（9/1） -->
 				<th>id</th>
-				<td><span th:text="*{id}"></span> 
-				<!-- 登録・更新のどちらか判断する用。 -->
-				<input type="hidden" th:field="*{id}"></td>
+				<td><span th:text="*{id}"></span> <input type="hidden"
+					th:field="*{id}"></td> <!-- 登録・更新のどちらか判断する用。 -->
 			</tr>
 			<tr>
 				<!-- 項目毎にエラーがあれば表示するように残す-->
@@ -32,9 +29,9 @@
 				<th>件名</th>
 				<td><input type="text" name="title" size="40"
 					th:value="*{title}">
-					<div th:if="${#fields.hasErrors('title')}" th:errors="*{title}"
-						th:errorclass="red"></div></td>
-			</tr>
+			<div th:if="${#fields.hasErrors('title')}" th:errors="*{title}"
+					th:errorclass="red"></div>
+				</td></tr>
 			<tr>
 				<th>重要度</th>
 				<td><input type="radio" value="1" th:field="*{importance}">高い
@@ -66,94 +63,15 @@
 					<input type="hidden" name="!done" value="N" /></td>
 			</tr>
 		</table>
-		</div>
-	</div>
-		<!-- タスク一覧表示9/13 -->
-		<div th:if="${session.mode=='update'}">
-			<hr style="margin-top: 2em; margin-bottom: lem;">
-			🔲各タスク
-			<div >
-				<table>
-					<tr>
-						<th>id</th>
-						<th th:text="#{label.title}"></th>
-						<th th:text="#{label.deadline}"></th>
-						<th th:text="#{label.check}"></th>
-						<th></th><!-- 削除リンクのための列 -->
-					</tr>
-					<!-- 登録されたタスク-->
-					<tr th:each="task,stat:*{taskList}">
-						<!--id  -->
-						<td><span th:text="${task.id}"></span> 
-						<!-- 更新を反映するための記述 -->
-							<input type="hidden"
-							th:name="${'taskList[' + stat.index + '].id'}"
-							th:value="${task.id}" /></td>
-						<!-- title name値はtaskList[n].titleとなるので、stat変数を使用している。-->
-						<td><input type="text"
-							th:name="${'taskList['+stat.index +'].title'}" size="40"
-							th:value="${task.title}">
-							<div
-								th:if="${#fields.hasErrors('taskList['+stat.index+'].title')}"
-								th:errors="*{taskList[__${stat.index}__].title}"
-								th:errorclass="red"></div></td>
-						<!-- 期限 -->
-						<td><input type="text"
-							th:name="${'taskList['+stat.index +'].deadline'}" size="10"
-							th:value="${task.deadline}" placeholder="yyyy-mm-dd">
-							<div
-								th:if="${#fields.hasErrors('taskList['+stat.index+'].deadline')}"
-								th:errors="*{taskList[__${stat.index}__].deadline}"
-								th:errorclass="red"></div></td>
-						<!-- チェック -->
-						<td><input type="checkbox"
-							th:name="${'taskList['+stat.index +'].done'}" value="Y"
-							th:checked="*{taskList[__${stat.index}__].done=='Y'}" /> <input
-							type="hidden" th:name="${'taskList['+stat.index +'].done'}"
-							value="N" /></td>
-						<!-- 削除 -->
-						<td><a
-							th:href="@{/task/delete(task_id=${task.id},todo_id=*{id})}"
-							th:text="#{link.delete}"></a></td>
-					</tr>
-					<!-- 新規タスク入力 -->
-					<tr>
-						<!--id  -->
-						<td></td>
-						<!--件名  -->
-						<td><input type="text" name="newTask.title" size="40"
-							th:value="*{newTask.title}">
-							<div th:if="${#fields.hasErrors('newTask.title')}"
-								th:errors="*{newTask.title}" th:errorclass="red"></div></td>
-						<!--期限-->
-						<td><input type="text" name="newTask.deadline" size="10"
-							th:value="*{newTask.deadline}" placeholder="yyyy-mm-dd">
-							<div th:if="${#fields.hasErrors('newTask.deadline')}"
-								th:errors="*{newTask.deadline}" th:errorclass="red"></div></td>
-						<!--チェック -->
-						<td><input type="checkbox" name="newTask.done" value="Y"
-							th:checked="*{newTask.done=='Y'}" /> <input type="hidden"
-							name="!newTask.done" value="N" /></td>
-						<!-- 追加ボタン-->
-						<td style="padding: 0px;">
-							<button type="submit" th:formaction="@{/task/create}"
-								th:text="#{button.add}"
-								style="margin: 2px; padding: 2px; width: 4em;"></button>
-						</td>
-					</tr>
-				</table>
-			</div>
-		</div>
 		<!--mode=create:登録、mode=update:削除のボタンを表示。-->
 		<div th:if="${session.mode=='update'}">
-			<button type="submit" th:formaction="@{/todo/update}">更新</button>
-			<button type="submit" th:formaction="@{/todo/delete}">削除</button>
-			<button type="submit" th:formaction="@{/todo/cancel}">キャンセル</button>
+		<button type="submit" th:formaction="@{/todo/update}">更新</button>
+		<button type="submit" th:formaction="@{/todo/delete}">削除</button>
+		<button type="submit" th:formaction="@{/todo/cancel}">キャンセル</button>
 		</div>
-		<div th:unless="${session.mode=='update'}">
-			<!--上の表示コードのth:if=session.modeがfalse時に作動するように  -->
-			<button type="submit" th:formaction="@{/todo/create/do}">登録</button>
-			<button type="submit" th:formaction="@{/todo/cancel}">キャンセル</button>
+		<div th:unless="${session.mode=='update'}">　<!--上の表示コードのth:if=session.modeがfalse時に作動するように  -->
+		<button type="submit" th:formaction="@{/todo/create/do}">登録</button>
+		<button type="submit" th:formaction="@{/todo/cancel}">キャンセル</button>
 		</div>
 	</form>
 </body>

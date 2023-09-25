@@ -127,6 +127,8 @@
 		<hr>
 		<button type="submit" th:formaction="@{/todo/create/form}"
 			th:text="#{button.new}"></button>
+		<!--PDF出力　9/25追加  -->
+		<a th:href="@{/todo/pdf}" th:text="#{link.PDF}" target="_blank" rel="noopener noreferrer"></a>
 	</form>
 	<table border="1">
 		<tr>

@@ -31,6 +31,7 @@ import com.example.todolist.repository.AttachedFileRepository;
 import com.example.todolist.repository.TaskRepository;
 import com.example.todolist.repository.TodoRepository;
 import com.example.todolist.service.TodoService;
+import com.example.todolist.view.TodoPdf;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
@@ -301,6 +302,14 @@ public class TodoListController {
 	//TodoDaoImplを作成し、それを経由でEntityManagerを渡せるようになる
 	public void init() {
 		todoDaoImpl = new TodoDaoImpl(entityManager);
+	}
+
+	//PDF生成処理
+	@GetMapping("/todo/pdf")
+	public TodoPdf writeTodoPdf(TodoPdf pdf) {
+		List<Todo> todolist = todoRepository.findAllByOrderById();
+		pdf.addStaticAttribute("todoList", todolist);
+		return pdf;
 	}
 
 }

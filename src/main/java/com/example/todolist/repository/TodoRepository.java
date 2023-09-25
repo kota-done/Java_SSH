@@ -32,4 +32,7 @@ public interface TodoRepository extends JpaRepository<Todo, Integer> {
 	@Override
 	List<Todo> findAll();
 
+	//PDF化のために追加（9/25）
+	List<Todo> findAllByOrderById();
+
 }
